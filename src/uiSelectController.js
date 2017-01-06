@@ -23,6 +23,7 @@ uis.controller('uiSelectCtrl',
   ctrl.spinnerClass = uiSelectConfig.spinnerClass;
   ctrl.removeSelected = uiSelectConfig.removeSelected; //If selected item(s) should be removed from dropdown list
   ctrl.closeOnSelect = true; //Initialized inside uiSelect directive link function
+  ctrl.closeOnFocusOut = false; //Initialized inside uiSelect directive link function
   ctrl.skipFocusser = false; //Set to true to avoid returning focus to ctrl when item is selected
   ctrl.search = EMPTY_SEARCH;
 
@@ -84,8 +85,8 @@ uis.controller('uiSelectCtrl',
   }
 
   // Most of the time the user does not want to empty the search input when in typeahead mode
-  function _resetSearchInput() {
-    if (ctrl.resetSearchInput) {
+  function _resetSearchInput(forceReset) {
+    if (ctrl.resetSearchInput || forceReset) {
       ctrl.search = EMPTY_SEARCH;
       //reset activeIndex
       if (ctrl.selected && ctrl.items.length && !ctrl.multiple) {
@@ -426,7 +427,13 @@ uis.controller('uiSelectCtrl',
           }
           // search ctrl.selected for dupes potentially caused by tagging and return early if found
           if (_isItemSelected(item)) {
-            ctrl.close(skipFocusser);
+            $timeout(function () {
+                ctrl.onDuplicateCallback($scope, {
+                    $item: item,
+                    $model: ctrl.parserResult.modelMapper($scope, locals)
+                });
+            });
+            ctrl.close(skipFocusser, true);
             return;
           }
         }
@@ -434,18 +441,19 @@ uis.controller('uiSelectCtrl',
         $scope.$broadcast('uis:select', item);
 
         if (ctrl.closeOnSelect) {
-          ctrl.close(skipFocusser);
+            var forceReset = ctrl.tagging.isActivated && item !== undefined;
+            ctrl.close(skipFocusser, forceReset);
         }
       }
     }
   };
 
   // Closes the dropdown
-  ctrl.close = function(skipFocusser) {
+  ctrl.close = function(skipFocusser, forceReset) {
     if (!ctrl.open) return;
     if (ctrl.ngModel && ctrl.ngModel.$setTouched) ctrl.ngModel.$setTouched();
     ctrl.open = false;
-    _resetSearchInput();
+    _resetSearchInput(forceReset);
     $scope.$broadcast('uis:close', skipFocusser);
 
   };

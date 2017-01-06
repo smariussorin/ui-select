@@ -52,6 +52,14 @@ uis.directive('uiSelect',
           }
         }();
 
+        $select.closeOnFocusOut = function () {
+            if (angular.isDefined(attrs.closeOnFocusOut)) {
+                return $parse(attrs.closeOnFocusOut)();
+            } else {
+                return uiSelectConfig.closeOnFocusOut;
+            }
+        }();
+
         scope.$watch('skipFocusser', function() {
             var skipFocusser = scope.$eval(attrs.skipFocusser);
             $select.skipFocusser = skipFocusser !== undefined ? skipFocusser : uiSelectConfig.skipFocusser;
@@ -59,6 +67,7 @@ uis.directive('uiSelect',
 
         $select.onSelectCallback = $parse(attrs.onSelect);
         $select.onRemoveCallback = $parse(attrs.onRemove);
+        $select.onDuplicateCallback = $parse(attrs.onDuplicate);
 
         //Set reference to ngModel from uiSelectCtrl
         $select.ngModel = ngModel;
@@ -198,6 +207,9 @@ uis.directive('uiSelect',
               skipFocusser = targetController && targetController !== $select; //To check if target is other ui-select
               if (!skipFocusser) skipFocusser =  ~focusableControls.indexOf(e.target.tagName.toLowerCase()); //Check if target is input, button or textarea
             } else {
+              skipFocusser = true;
+            }
+            if ($select.closeOnFocusOut) {
               skipFocusser = true;
             }
             $select.close(skipFocusser);
@@ -372,8 +384,14 @@ uis.directive('uiSelect',
               }
             }
 
+            // Keep the dropdown hidden on empty choices enabled
+            if ($select.tagging.isActivated && $select.hideEmptyChoices && $select.items.length == 0) {
+              dropdown[0].style.opacity = 0;
+            }
+            else {
             // Display the dropdown once it has been positioned.
-            dropdown[0].style.opacity = 1;
+              dropdown[0].style.opacity = 1;
+            }
           });
         };
 
