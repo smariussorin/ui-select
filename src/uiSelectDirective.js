@@ -384,8 +384,8 @@ uis.directive('uiSelect',
               }
             }
 
-            // Keep the dropdown hidden on empty choices enabled
-            if ($select.tagging.isActivated && $select.hideEmptyChoices && $select.items.length == 0) {
+            // Keep the dropdown hidden on empty choices
+            if ($select.tagging.isActivated && $select.items.length == 0) {
               dropdown[0].style.opacity = 0;
             }
             else {
